@@ -4,7 +4,7 @@ Move a big folder to another drive and leave a **directory junction** behind, so
 
 Built for people whose `C:` drive keeps filling up from `%LOCALAPPDATA%` and `%PROGRAMDATA%`: game launchers, caches, downloads, screenshots. It automates the manual trick (move the folder, `mklink /J`) and removes the ways it goes wrong.
 
-> **Status:** The engine is tested in te build and has been manually tested on Windows 10. Try it on a folder you don't mind re-downloading first and use at your own risk.
+> **Status:** The engine is tested as part of CI and has been manually tested on Windows 10. Try it on a folder you don't mind re-downloading first and use at your own risk.
 
 ![Example Screenshot](screenshots/example.png)
 
