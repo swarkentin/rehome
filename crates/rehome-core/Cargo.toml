@@ -1,0 +1,11 @@
+[package]
+name = "rehome-core"
+description = "Safe folder relocation with directory junctions: the platform-independent engine behind Rehome."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+# Intentionally no dependencies: small binaries, fast builds, nothing to audit.
+[dependencies]

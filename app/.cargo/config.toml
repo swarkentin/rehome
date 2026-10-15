@@ -1,0 +1,4 @@
+# Link the C runtime statically so rehome.exe starts on a clean Windows 10 machine
+# without the Visual C++ Redistributable installed.
+[target.'cfg(target_env = "msvc")']
+rustflags = ["-C", "target-feature=+crt-static"]

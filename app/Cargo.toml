@@ -1,0 +1,31 @@
+[package]
+name = "rehome"
+description = "Move a folder to another drive and leave a junction behind, so apps never notice."
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.85"
+license = "MIT"
+repository = "https://github.com/OWNER/rehome"
+
+# This crate is its own workspace: it only builds on Windows and needs Windows-only
+# dependencies, while the engine in ../crates/rehome-core builds and tests anywhere.
+[workspace]
+
+[dependencies]
+rehome-core = { path = "../crates/rehome-core" }
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = [
+    "Win32_Foundation",
+    "Win32_Security",
+    "Win32_Storage_FileSystem",
+    "Win32_System_IO",
+    "Win32_System_RestartManager",
+] }
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

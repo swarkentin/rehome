@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  core:
+    name: Core engine (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: Format
+        if: matrix.os == 'ubuntu-latest'
+        run: cargo fmt --all --check
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+      - name: Test
+        run: cargo test --workspace
+
+  app:
+    # Windows 10 itself isn't available as a hosted runner (windows-2019 was retired in 2025).
+    # windows-2022 is the oldest image left; windows-2025 is the newest. See TESTING.md for the
+    # manual Windows 10 checklist.
+    name: "Windows app (${{ matrix.os }}, build + end-to-end smoke test)"
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2022, windows-2025]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: app
+      - name: Format
+        working-directory: app
+        run: cargo fmt --check
+      - name: Clippy
+        working-directory: app
+        run: cargo clippy --all-targets -- -D warnings
+      - name: Build release
+        working-directory: app
+        run: cargo build --release
+      - name: Binary must not need the Visual C++ runtime DLLs
+        shell: pwsh
+        run: |
+          $text = [Text.Encoding]::ASCII.GetString([IO.File]::ReadAllBytes('app/target/release/rehome.exe'))
+          if ($text -match '(?i)vcruntime140|msvcp140') {
+            throw 'rehome.exe imports the VC++ runtime; a clean Windows 10 install would fail to start it'
+          }
+      - name: Report size
+        shell: pwsh
+        run: '"{0:N0} bytes" -f (Get-Item app/target/release/rehome.exe).Length'
+      - name: End-to-end smoke test (real junctions, real drives)
+        shell: pwsh
+        run: ./.github/scripts/smoke.ps1 -Exe app/target/release/rehome.exe
+      - uses: actions/upload-artifact@v4
+        if: matrix.os == 'windows-2022'
+        with:
+          name: rehome-windows-x64
+          path: app/target/release/rehome.exe
+          if-no-files-found: error

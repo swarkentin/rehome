@@ -1,0 +1,37 @@
+name: Release
+
+# Push a tag like v0.1.0 (after CI is green on that commit) to publish rehome.exe.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    # Oldest available image, so the binary is built against the most conservative baseline.
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: app
+      - name: Build
+        working-directory: app
+        run: cargo build --release
+      - name: Smoke test the exact binary being released
+        shell: pwsh
+        run: ./.github/scripts/smoke.ps1 -Exe app/target/release/rehome.exe
+      - name: Checksum
+        shell: pwsh
+        run: |
+          Copy-Item app/target/release/rehome.exe rehome.exe
+          $h = (Get-FileHash rehome.exe -Algorithm SHA256).Hash.ToLower()
+          "$h  rehome.exe" | Set-Content -Encoding ascii rehome.exe.sha256
+      - name: Publish
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${{ github.ref_name }}" rehome.exe rehome.exe.sha256 --generate-notes --title "${{ github.ref_name }}"
