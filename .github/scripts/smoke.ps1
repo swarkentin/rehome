@@ -70,7 +70,9 @@ try {
     $r = Run @('move', $src2, '--to', 'D:\', '--yes')
     Write-Host $r.Out
     if ($r.Code -eq 0) { Fail 'move of an in-use folder should have been refused' }
-    if ($r.Out -notmatch 'still using') { Fail 'in-use message missing' }
+    if ($r.Out -notmatch '(?i)(still using|using a file in this folder|being used by another process)') {
+        Fail 'in-use message missing'
+    }
     if ((Get-Item $src2).LinkType) { Fail 'in-use folder must stay a real folder' }
     if ((Get-Item $src2).PSIsContainer -ne $true) { Fail 'folder vanished' }
     if (Test-Path "$src2.rehome-old") { Fail 'leftover .rehome-old' }
