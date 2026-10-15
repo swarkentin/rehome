@@ -6,7 +6,7 @@ Built for people whose `C:` drive keeps filling up from `%LOCALAPPDATA%` and `%P
 
 > **Status:** The engine is tested in te build and has been manually tested on Windows 10. Try it on a folder you don't mind re-downloading first and use at your own risk.
 
-![Example Screenshot](screenshots\example.png)
+![Example Screenshot](screenshots/example.png)
 
 ## Requirements
 
